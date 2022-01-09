@@ -30,14 +30,20 @@ int check_port(int port, char *ip) {
 
 int main(int argc[], char *argv[]) {
 
+    if(strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+        printf("too lazy to add anything here sorry.\n");
+        exit(0);
+    }
+
     if(argc < 3) {
         printf("How to use: ./PortScanner <ip> <options>\n");
         exit(-1);
     }
+    
     char *ip, *option, *optionOption;
-    int sockfd, check;
+    int check, openPorts;
     clock_t time;
-
+    
     time = clock();
 
     ip = argv[1];
@@ -45,32 +51,36 @@ int main(int argc[], char *argv[]) {
     if(argc > 2)
         optionOption = argv[3];
 
-    if(strcmp(ip, "-h") == 0 || strcmp(ip, "--help") == 0) {
-        printf("Help\n");
 
-    } else if(strcmp(option, "-pa") == 0) {
+    if(strcmp(option, "-pa") == 0) {
+        printf("[%s*%s] Scanning %sALL%s ports on %s%s%s\n", B_GREEN, RESET, B_CYAN, RESET, B_CYAN, ip, RESET);
         for(int port = 1; port <= MAX_PORT; port++) {
             check = check_port(port, ip);
             if(check == 0) {
-                printf("%s[+]%s Open port : %s%d%s\n", B_GREEN, RESET, B_CYAN, port, RESET);
+                printf("[%s+%s] Open port: %s%d%s\n", B_GREEN, RESET, B_CYAN, port, RESET);
+                openPorts++;
             }
         }
-
+        if(openPorts == 0)
+            printf("[%s-%s] All ports are closed\n", B_RED, RESET);
+        
     } else if(strcmp(option, "-p") == 0 && argc >3) {
         long port = strtol(argv[3], NULL, 10);
 
         if(port > MAX_PORT) {
-            printf("[-] Port %d out of reach", port);
+            printf("[%s-%s] Port %s%ld%s out of reach\n", B_RED, RESET, B_CYAN, port, RESET);
             exit(-1);
         }
 
         if(check_port(port, ip) == 0) {
-            printf("[+] Open port : %d\n", port);
+            printf("[%s+%s] Open port: %s%ld%s\n", B_GREEN, RESET, B_CYAN, port, RESET);
         } else {
-            printf("[-] Port %d is closed\n", port);
+            printf("[%s-%s] Port %s%ld%s is closed\n", B_RED, RESET, B_CYAN, port, RESET);
         }
     }
+ 
     time = clock() - time;
     printf("Runtime: %fs\n", ((float)time) / CLOCKS_PER_SEC);
+ 
     return 0;
 }
