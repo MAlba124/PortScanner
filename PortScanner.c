@@ -9,26 +9,25 @@
 
 #include "PortScanner.h"
 
-int check_port(int port, char *ip) {
+struct sockaddr_in servaddr;
+servaddr.sin_family = AF_INET;
 
-    int connection_status, sockfd;
-    struct sockaddr_in servaddr;
-    
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    bzero(&servaddr, sizeof(servaddr));
+int check_port(int sockfd, int port, char *ip) {
 
-    servaddr.sin_family = AF_INET;
+    int connection_status;
+
     servaddr.sin_addr.s_addr = inet_addr(ip);
     servaddr.sin_port = htons(port);
     
     connection_status = connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
     
-    close(sockfd);
     return connection_status;
 }
 
 int main(int argc[], char *argv[]) {
+
+    int sockfd;
 
     if(strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
         printf("too lazy to add anything here sorry.\n");
@@ -39,12 +38,14 @@ int main(int argc[], char *argv[]) {
         printf("How to use: ./PortScanner <ip> <options>\n");
         exit(-1);
     }
-    
+
     char *ip, *option, *optionOption;
     int check, openPorts;
     clock_t time;
     
     time = clock();
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     ip = argv[1];
     option = argv[2];
@@ -55,7 +56,7 @@ int main(int argc[], char *argv[]) {
     if(strcmp(option, "-pa") == 0) {
         printf("[%s*%s] Scanning %sALL%s ports on %s%s%s\n", B_GREEN, RESET, B_CYAN, RESET, B_CYAN, ip, RESET);
         for(int port = 1; port <= MAX_PORT; port++) {
-            check = check_port(port, ip);
+            check = check_port(sockfd, port, ip);
             if(check == 0) {
                 printf("[%s+%s] Open port: %s%d%s\n", B_GREEN, RESET, B_CYAN, port, RESET);
                 openPorts++;
@@ -71,14 +72,17 @@ int main(int argc[], char *argv[]) {
             printf("[%s-%s] Port %s%ld%s out of reach\n", B_RED, RESET, B_CYAN, port, RESET);
             exit(-1);
         }
-
-        if(check_port(port, ip) == 0) {
+        check = check_port(sockfd, port, ip);
+        if(check == 0) {
             printf("[%s+%s] Open port: %s%ld%s\n", B_GREEN, RESET, B_CYAN, port, RESET);
         } else {
             printf("[%s-%s] Port %s%ld%s is closed\n", B_RED, RESET, B_CYAN, port, RESET);
         }
     }
- 
+
+    // Closes the socket
+    close(sockfd);
+
     time = clock() - time;
     printf("Runtime: %fs\n", ((float)time) / CLOCKS_PER_SEC);
  
