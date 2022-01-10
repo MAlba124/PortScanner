@@ -6,5 +6,5 @@
 #define RESET "\e[0m"
 
 // function to check if the port is open in defined ip address
-int check_port(int port, char *ip);
+int check_port(int sockfd, int port, char *ip);
 
